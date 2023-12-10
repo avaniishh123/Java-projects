@@ -1,0 +1,117 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.Arrays;
+
+public class MemoryMatchGame {
+    JFrame frame = new JFrame("Memory Match Game");
+    JButton[] buttons = new JButton[9];
+    ImageIcon[] images = new ImageIcon[3];
+    ImageIcon hiddenImage = new ImageIcon("C:/Users/vamsi/OneDrive/Pictures/Screenshots/img 7.png");
+    int numClicks = 0;
+    int clickedIndex1, clickedIndex2;
+    Timer t;
+    JLabel timerLabel = new JLabel();
+    int timeLeft = 60;
+    int score = 0;
+    JLabel scoreLabel = new JLabel();
+    JPanel gamePanel = new JPanel();
+    JPanel welcomePanel = new JPanel();
+
+    public MemoryMatchGame() {
+        frame.setSize(400, 400);
+        frame.setLayout(new CardLayout());
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Load specific images
+        images[0] = new ImageIcon("C:/Users/vamsi/OneDrive/Pictures/Screenshots/img 2.png.png");
+        images[1] = new ImageIcon("C:/Users/vamsi/OneDrive/Pictures/Screenshots/img 3.png.png");
+        images[2] = new ImageIcon("C:/Users/vamsi/OneDrive/Pictures/Screenshots/img 4.png.png");
+
+        // Duplicate and shuffle images
+        ImageIcon[] shuffledImages = new ImageIcon[18];
+        for (int i = 0; i < 9; i++) {
+            shuffledImages[i] = images[i % 3];
+            shuffledImages[i + 9] = images[i % 3];
+        }
+        Collections.shuffle(Arrays.asList(shuffledImages));
+
+        gamePanel.setLayout(new GridLayout(4, 3));
+
+        for (int i = 0; i < 9; i++) {
+            buttons[i] = new JButton();
+            buttons[i].setIcon(hiddenImage); // Set the initial icon to the hidden image
+            buttons[i].addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    for (int j = 0; j < 9; j++) {
+                        if (e.getSource() == buttons[j]) {
+                            buttons[j].setIcon(shuffledImages[j]); // Reveal the image when the button is clicked
+                            buttons[j].setEnabled(false);
+                            checkMatch(j);
+                        }
+                    }
+                }
+            });
+            gamePanel.add(buttons[i]);
+        }
+
+        timerLabel.setText("Time left: " + timeLeft);
+        gamePanel.add(timerLabel);
+
+        t = new Timer(1000, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                timeLeft--;
+                timerLabel.setText("Time left: " + timeLeft);
+                if (timeLeft <= 0) {
+                    t.stop();
+                    for (JButton button : buttons) {
+                        button.setEnabled(false);
+                    }
+                }
+            }
+        });
+
+        JButton startButton = new JButton("Start Game");
+        startButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "game");
+                t.start();
+            }
+        });
+        welcomePanel.add(startButton);
+
+        scoreLabel.setText("Score: " + score);
+        gamePanel.add(scoreLabel);
+
+        frame.add(welcomePanel, "welcome");
+        frame.add(gamePanel, "game");
+
+        frame.setVisible(true);
+    }
+
+    public void checkMatch(int j) {
+        numClicks++;
+        if (numClicks == 1) {
+            clickedIndex1 = j;
+        } else if (numClicks == 2) {
+            clickedIndex2 = j;
+            numClicks = 0;
+
+            if (!buttons[clickedIndex1].getIcon().equals(buttons[clickedIndex2].getIcon())) {
+                buttons[clickedIndex1].setIcon(hiddenImage); // Hide the image again if it doesn't match
+                buttons[clickedIndex2].setIcon(hiddenImage);
+                buttons[clickedIndex1].setEnabled(true);
+                buttons[clickedIndex2].setEnabled(true);
+            } else {
+                score++;
+                scoreLabel.setText("Score: " + score);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new MemoryMatchGame();
+    }
+}
